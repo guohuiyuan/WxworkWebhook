@@ -2,6 +2,8 @@ package wxworkwebhook
 
 import (
 	"bytes"
+	"crypto/md5"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -30,7 +32,6 @@ const (
 	sendURL        = baseURL + "/cgi-bin/webhook/send?key=%s"
 )
 
-// UploadMedia 上传文件
 func (w *Webhook) UploadMedia(path string) (response UploadMediaResponse, err error) {
 	requestURL := fmt.Sprintf(uploadMediaURL, w.WebhookKey)
 	payload := &bytes.Buffer{}
@@ -62,25 +63,24 @@ func (w *Webhook) UploadMedia(path string) (response UploadMediaResponse, err er
 	return
 }
 
-// Send 发送消息
 func (w *Webhook) Send(msg interface{}) (response CommonResponse, err error) {
 	v := reflect.TypeOf(msg)
-	r := BotMsgReq{}
+	r := MsgReq{}
 	switch v.Name() {
 	case "File":
-		r.Msgtype = BotMsgFile
+		r.Msgtype = MsgFile
 		r.File = msg.(File)
 	case "Image":
-		r.Msgtype = BotMsgImage
+		r.Msgtype = MsgImage
 		r.Image = msg.(Image)
 	case "Markdown":
-		r.Msgtype = BotMsgMarkdown
+		r.Msgtype = MsgMarkdown
 		r.Markdown = msg.(Markdown)
 	case "News":
-		r.Msgtype = BotMsgNews
+		r.Msgtype = MsgNews
 		r.News = msg.(News)
 	case "Text":
-		r.Msgtype = BotMsgText
+		r.Msgtype = MsgText
 		r.Text = msg.(Text)
 	default:
 		err = errors.New("msg的类型不合法,合法的类型有File,Image,Markdown,News,Text")
@@ -96,8 +96,11 @@ func (w *Webhook) Send(msg interface{}) (response CommonResponse, err error) {
 	return
 }
 
-// SendPathFile 通过本地路径，上传并且发送文件（也许这个不应该提供）
-func (w *Webhook) SendPathFile(path string) (response CommonResponse, err error) {
+func (w *Webhook) SendFile(path string) (response CommonResponse, err error) {
+	if IsNetFile(path) {
+		err = errors.New("请发送本地路径")
+		return
+	}
 	umr, err := w.UploadMedia(path)
 	if err != nil {
 		return
@@ -105,5 +108,20 @@ func (w *Webhook) SendPathFile(path string) (response CommonResponse, err error)
 	response, err = w.Send(File{
 		MediaID: umr.MediaID,
 	})
+	return
+}
+
+func (w *Webhook) SendImage(path string) (response CommonResponse, err error) {
+	if IsNetFile(path) {
+		err = errors.New("请发送本地路径")
+		return
+	}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return
+	}
+	picBase64 := base64.StdEncoding.EncodeToString(data)
+	sign := fmt.Sprintf("%x", md5.Sum(data))
+	response, err = w.Send(Image{Base64: picBase64, Md5: sign})
 	return
 }

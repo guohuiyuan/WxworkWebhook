@@ -1,6 +1,5 @@
 package wxworkwebhook
 
-// UploadMediaResponse 文件上传响应体
 type UploadMediaResponse struct {
 	CommonResponse
 	Type      string `json:"type"`
@@ -8,21 +7,20 @@ type UploadMediaResponse struct {
 	CreatedAt string `json:"created_at"`
 }
 
-// CommonResponse 基本响应体
 type CommonResponse struct {
 	Errcode int64  `json:"errcode"`
 	Errmsg  string `json:"errmsg"`
 }
 
 const (
-	BotMsgFile     = "file"
-	BotMsgImage    = "image"
-	BotMsgMarkdown = "markdown"
-	BotMsgNews     = "news"
-	BotMsgText     = "text"
+	MsgFile     = "file"
+	MsgImage    = "image"
+	MsgMarkdown = "markdown"
+	MsgNews     = "news"
+	MsgText     = "text"
 )
 
-type BotMsgReq struct {
+type MsgReq struct {
 	Msgtype  string   `json:"msgtype"`
 	File     File     `json:"file,omitempty"`
 	Image    Image    `json:"image,omitempty"`
