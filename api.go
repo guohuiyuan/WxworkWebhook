@@ -125,3 +125,24 @@ func (w *Webhook) SendImage(path string) (response CommonResponse, err error) {
 	response, err = w.Send(Image{Base64: picBase64, Md5: sign})
 	return
 }
+
+func (w *Webhook) SendText(text string) (response CommonResponse, err error) {
+	response, err = w.Send(Text{Content: text})
+	return
+}
+
+func (w *Webhook) SendMarkdown(text string) (response CommonResponse, err error) {
+	response, err = w.Send(Markdown{Content: text})
+	return
+}
+
+func (w *Webhook) SendNews(title, description, jumpURL, picURL string) (response CommonResponse, err error) {
+	a := Article{
+		Title:       title,
+		Description: description,
+		URL:         jumpURL,
+		PicURL:      picURL,
+	}
+	response, err = w.Send(News{Articles: []Article{a}})
+	return
+}
